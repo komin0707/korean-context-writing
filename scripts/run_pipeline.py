@@ -14,7 +14,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from feedback_memory import context_text, canonical_genre
+from feedback_memory import context_text, canonical_genre, pick_entries
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS = ROOT / "prompts"
@@ -36,8 +36,18 @@ def load_examples() -> str:
 
 
 def context() -> str:
-    names = ["context-map.md", "author-stance.md", "empathy.md", "korean-register.md", "hooking.md", "facts-and-evidence.md"]
-    return "\n\n".join(f"# {name}\n{load_text(KNOWLEDGE / name)}" for name in names)
+    return load_text(KNOWLEDGE / "creative-practice.md")
+
+
+def approved_writer_context(genre: str, topic: str) -> str:
+    approved = [x for x in pick_entries(genre, topic, limit_per_status=4)
+                if x.get("status") == "approved"]
+    if not approved:
+        return "화자 프로필과 긍정형 실행 지침을 바탕으로 고유한 관점을 형성한다."
+    return "\n".join(
+        f"사용자가 승인한 문체 (소재: {x.get('topic', '')}): {x['quote']}"
+        for x in approved
+    )
 
 
 def fill(template: str, **values: str) -> str:
@@ -85,6 +95,10 @@ def parse_review(raw: str, draft: str) -> dict:
         item["decision"] = "revise"
     if any(v == 0 for v in scores.values()):
         item["decision"] = "revise"
+    if any(scores[k] <= 2 for k in ("voice", "empathy", "stance", "hook")):
+        item["decision"] = "revise"
+    if any(issue.get("severity") == "major" for issue in issues):
+        item["decision"] = "revise"
     return item
 
 
@@ -102,9 +116,14 @@ def assemble_reviewer(task: str, sources: str, references: str, draft: str) -> s
 
 
 def assemble_reviser(task: str, sources: str, draft: str, review: dict) -> str:
-    return ("# RELEVANT SKILL RULES\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
+    actions = {
+        "direction": review.get("revision_priority", ""),
+        "improvements": [x.get("repair", "") for x in review.get("issues", [])],
+        "preserve": review.get("what_to_preserve", []),
+    }
+    return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
             fill(load_text(PROMPTS / "reviser.md"), TASK=task, SOURCES=sources,
-                 DRAFT=draft, REVIEW=json.dumps(review, ensure_ascii=False, indent=2)))
+                 DRAFT=draft, REVIEW=json.dumps(actions, ensure_ascii=False, indent=2)))
 
 
 def main() -> int:
@@ -123,11 +142,13 @@ def main() -> int:
     if not args.prepare_only and (not args.writer_cmd or not args.reviewer_cmd):
         parser.error("Set --prepare-only or provide BOTH --writer-cmd and --reviewer-cmd")
 
-    sources = load_text(Path(args.sources_file)) if args.sources_file else "제공된 외부 근거 자료 없음. 지어내지 말고 알고 있는 범위를 구분할 것."
-    refs = context_text(args.genre, args.task)
+    sources = load_text(Path(args.sources_file)) if args.sources_file else "확인된 근거와 화자의 해석을 구분하고 검증 범위를 정확하게 전한다."
+    refs = approved_writer_context(args.genre, args.task)
+    reviewer_refs = context_text(args.genre, args.task)
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
     (out / "00_selected_memory.md").write_text(refs, encoding="utf-8")
+    (out / "00_reviewer_memory.md").write_text(reviewer_refs, encoding="utf-8")
     writer_prompt = assemble_writer(args.task, sources, refs)
     (out / "01_writer_prompt.md").write_text(writer_prompt, encoding="utf-8")
 
@@ -143,7 +164,7 @@ def main() -> int:
     outcome = "MODEL_REVIEW_PROVISIONAL"
     run_log = []
     for attempt in range(args.max_revisions + 1):
-        rp = assemble_reviewer(args.task, sources, refs, writer)
+        rp = assemble_reviewer(args.task, sources, reviewer_refs, writer)
         (out / f"review_prompt_{attempt}.md").write_text(rp, encoding="utf-8")
         raw = run_command(args.reviewer_cmd, rp, args.timeout)
         (out / f"review_raw_{attempt}.txt").write_text(raw, encoding="utf-8")

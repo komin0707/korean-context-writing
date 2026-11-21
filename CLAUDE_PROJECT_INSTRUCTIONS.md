@@ -1,14 +1,10 @@
-# Claude Code/Work용 지속형 한국어 글쓰기 프로젝트 지침
+# Claude 한국어 글쓰기 프로젝트 지침
 
-이 프로젝트의 목표는 한국어 글의 작가 관점·맥락·말투·공감·후킹을 유지하는 것이다. 캐러셀 디자인은 범위 밖이다.
+1. SKILL.md, profiles/author-voice.yaml, knowledge/creative-practice.md, prompts/writer.md를 읽고 원고를 작성한다.
+2. 현재 매체와 독자, 근거 자료를 확인해 화자의 관점·정서·말투·후킹에 연결한다.
+3. 사용자가 명시적으로 승인한 문체 자료를 다음 원고의 참고 사례로 사용한다.
+4. 완성 원고는 편집 단계에서 prompts/reviewer.md로 평가한다. 평가자가 도출한 개선 행동을 prompts/reviser.md로 반영한다.
+5. 사용자의 평가가 확인되면 scripts/feedback_memory.py record로 기록하고 공통 저장소에 반영한다.
+6. 새로운 세션에서도 최신 저장소의 지침과 승인 자료를 읽는다.
 
-**반드시 수행할 것:**
-
-1. 새 원고를 쓸 때 `SKILL.md`, `profiles/author-voice.yaml`, 현재 장르와 관련된 `memory/feedback.jsonl` 및 필요한 `knowledge/*.md`를 열어 읽는다. 셸 사용 가능하면 `python3 scripts/run_pipeline.py --genre <장르> --task <의뢰> --prepare-only --output <출력폴더>`를 실행해 `01_writer_prompt.md`를 따른다. 이 명령 자체는 생성 모델을 호출하지 않는다.
-2. `memory/feedback.jsonl`에서 **approved/partial/rejected**를 구분한다. 모델이 자신을 칭찬한 검수 결과를 사람의 승인으로 저장하지 않는다. 이전 실패 원고를 좋은 표본으로 모방하지 않는다.
-3. 글을 쓴 뒤에는 맥락·가치관·감정의 인과·독자의 이해·후킹·어휘의 연어·문장 호흡·화자 일관성을 별도로 검토한다. 정보를 정확하게 적었다는 이유로 자동 합격시키지 않는다.
-4. 사용자가 글의 특정 문장/전체를 승인하거나 거절하면, **실제 반응을 넘겨짚지 말고** `python3 scripts/feedback_memory.py record ...`로 파일에 기록한다. 단순한 불만이면 그 불만이 무엇에 관한 것인지 확실한 범위만 기록하고, 사유 미상은 사유 미상으로 남긴다.
-5. 파일 쓰기 도구가 없으면 영구 저장을 했다고 주장하지 않는다. 다른 세션에서도 이어가려면 로컬 파일만이 아닌 같은 비공개 원격 저장소를 갱신해야 한다.
-6. 같은 단어가 나타났다고 무조건 'AI 문체'로 판단하지 않는다. 단어의 사회적 의미·앞뒤 맥락·글의 장르에 따라 적합성을 판단한다.
-
-`SETUP_PERSISTENCE.md`를 따라 실제로 저장/재호출이 가능한지 설치 시 한 번 테스트한다.
+프롬프트 준비: python3 scripts/run_pipeline.py --task "글쓰기 주제" --genre 건강정보 --prepare-only --output writing_output

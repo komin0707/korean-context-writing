@@ -6,7 +6,7 @@
 
 - `memory/feedback.jsonl`: 과거 피드백 영구 저장. 편집·버전관리 가능한 한 줄 JSON 객체 기록.
 - `scripts/feedback_memory.py`: **사용자가 실제로 승인/부분 승인/거절한** 표현과 사유를 기록하고, 다음 원고에 관련 사례를 재검색.
-- `scripts/run_pipeline.py`: 작성자 프롬프트를 만들 때 **현재 장르와 주제에 관련된 저장 피드백**을 읽어 넣는다. 작성/검수 모델을 연결했다면 실제로 글쓰기 루프 실행 가능.
+- `scripts/run_pipeline.py`: 작성자 프롬프트에는 **명확히 승인된 문체 사례만** 넣고, 거절과 부분 승인 기록은 검수자에게 제공한다. 작성/검수 모델을 연결했다면 실제로 글쓰기 루프 실행 가능.
 - `profiles/author-voice.yaml`, `knowledge/`: 작가의 기준과 한국어 창작 규칙. 단순 사용자의 호감/불호로 사실 판단을 변경하지 않는다.
 - `tests/`: 저장·재호출·장르 분리·무단 승인 차단 테스트.
 
@@ -78,33 +78,33 @@ Claude Code/에이전트가 스킬을 읽는 것과 스크립트를 실제로 �
 
 컴퓨터 안의 파일은 다른 클라우드 세션에서 자동 접근할 수 없다. **공통 저장 위치**가 필요하다. 다음 중 하나를 선택한다.
 
-**추천: 개인 GitHub 비공개 저장소**
+**현재 운영 저장소: GitHub Public**
 
-1. `korean-context-writing` 폴더를 새 **비공개** 저장소에 올린다. 개인 피드백과 원고가 들어가므로 공개 저장소는 권하지 않는다.
+1. 공개 저장소 https://github.com/komin0707/korean-context-writing 최신 버전을 사용한다. 피드백은 공개되므로 공개 적합성을 확인한다.
 2. Claude Code/Work에서 같은 저장소를 읽을 수 있도록 연결한다. 지원되는 연결/권한은 사용하는 앱의 실제 상태에 따르며, 연결이 안 된다면 해당 세션은 누적 기억을 사용할 수 없다.
 3. 작업 시작 시 최신 `memory/feedback.jsonl`과 스킬 파일을 읽게 하고, 사용자 반응을 받은 뒤 변경사항을 **같은 저장소에 커밋/반영**하게 한다.
 4. 다음 세션은 저장소 최신 버전을 다시 읽는다. 이것이 기기와 모델을 넘어서는 '기억'의 실체다.
 
-로컬 Git 명령 예시 (새 비공개 원격 저장소 URL이 준비된 경우):
+로컬 Git 명령 예시 (새 로컬 저장소를 준비하는 경우):
 
 ```bash
 git init
 git add SKILL.md profiles knowledge examples prompts scripts memory tests README.md SETUP_PERSISTENCE.md
  git commit -m 'Initialize Korean writing memory'
 git branch -M main
-git remote add origin <본인의 비공개 GitHub 저장소 URL>
+git remote add origin https://github.com/komin0707/korean-context-writing.git
 git push -u origin main
 ```
 
 이후 연결된 프로젝트에서 피드백 파일을 갱신했다면 `git add memory/feedback.jsonl && git commit -m 'Add explicit writing feedback' && git push`를 실행한다. 다른 기기에서는 먼저 `git pull --ff-only`로 최신 변경사항을 가져온다. **동시에 여러 세션이 수정하면 충돌 병합이 필요**하다.
 
-비공개 GitHub를 사용할 수 없다면, 모든 세션이 읽고 **수정까지 할 수 있는** 같은 Drive 폴더나 저장소에 두어도 된다. 단순히 ZIP을 각 세션에 따로 업로드하면 서로 독립된 복사본이라 누적되지 않는다.
+GitHub 사용이 어려우면, 모든 세션이 읽고 **수정까지 할 수 있는** 같은 Drive 폴더나 저장소에 두어도 된다. 단순히 ZIP을 각 세션에 따로 업로드하면 서로 독립된 복사본이라 누적되지 않는다.
 
 ## 4. 독립 검수는 별도 기능이다
 
 저장된 피드백을 불러오는 것과, 현재 글이 좋은지를 판정하는 것은 다르다.
 
-- 작성자 모델: 현재 과제 + 관련 피드백 + 원문 자료 사용
+- 작성자 모델: 현재 과제 + 긍정형 지침 + 명시적 승인 사례 + 원문 자료 사용
 - 검수 모델/별도 세션: 실제 문장을 인용하며 자연스러움, 맥락, 공감, 후킹, 사실성 검토
 - 수정자: 검수의 구체적 오류만 수정
 - **사용자 평가**: 승인/거절 여부를 영구 피드백으로 기록

@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED = [
     "SKILL.md", "README.md", "profiles/author-voice.yaml",
-    "knowledge/context-map.md", "knowledge/author-stance.md", "knowledge/empathy.md",
+    "knowledge/context-map.md", "knowledge/creative-practice.md", "knowledge/author-stance.md", "knowledge/empathy.md",
     "knowledge/korean-register.md", "knowledge/hooking.md", "knowledge/facts-and-evidence.md",
     "examples/README.md", "examples/approved.jsonl", "examples/partial.jsonl",
     "examples/rejected.jsonl", "tests/scenarios.jsonl", "tests/evaluation-rubric.md",
