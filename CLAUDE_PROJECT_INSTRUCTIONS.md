@@ -1,6 +1,6 @@
 # Claude 한국어 글쓰기 프로젝트 지침
 
-1. SKILL.md, profiles/author-voice.yaml, knowledge/creative-practice.md, knowledge/korean-expression.md, knowledge/emotion-and-reader.md, prompts/writer.md를 읽고 원고를 작성한다.
+1. SKILL.md, profiles/author-voice.yaml, knowledge/creative-practice.md, knowledge/korean-expression.md, knowledge/emotion-and-reader.md, knowledge/reader-imagination.md, prompts/writer.md를 읽고 원고를 작성한다.
 2. 현재 매체와 독자, 근거 자료를 확인해 화자의 관점·정서·말투·후킹에 연결한다.
 3. 사용자가 명시적으로 승인한 문체 자료를 다음 원고의 참고 사례로 사용한다.
 4. 완성 원고는 편집 단계에서 prompts/reviewer.md로 평가한다. 평가자가 도출한 개선 행동을 prompts/reviser.md로 반영한다.
