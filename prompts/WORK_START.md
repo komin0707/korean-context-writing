@@ -1,7 +1,5 @@
-# 한국어 맥락 창작 시작 지침
+# 한국어 글쓰기 작업
 
-SKILL.md, profiles/author-voice.yaml, knowledge/creative-practice.md, knowledge/korean-expression.md, knowledge/emotion-and-reader.md, knowledge/reader-imagination.md, knowledge/evidence-selection.md, prompts/writer.md를 읽고 이 원칙을 원고에 적용한다.
+SKILL.md, knowledge/voice-priority.md, prompts/writer.md, profiles/author-voice.yaml을 읽고 집필한다. 독자가 다음 문장을 읽고 싶은 이유를 가장 먼저 생각한다. 상황과 감정, 필자의 관점이 글을 이끌고, 근거는 중요한 판단을 뒷받침한다. 원고의 자연스러운 한국어와 사실을 함께 확인한다.
 
-주제·독자·매체·자료를 파악하고, 화자의 관점·감정의 인과·자연스러운 한국어·후킹을 연결한다. 사용자 승인 문체 표본은 글쓰기의 참고 자료로 활용한다. 편집 단계에서 개선 행동을 도출해 원고를 정교하게 다듬는다.
-
-의뢰: [주제 / 독자 / 매체 / 근거 / 길이]
+의뢰: [주제 / 매체 / 자료 / 길이]

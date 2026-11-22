@@ -1,3 +1,3 @@
-SKILL.md와 knowledge/creative-practice.md, knowledge/korean-expression.md, knowledge/emotion-and-reader.md, knowledge/reader-imagination.md, knowledge/evidence-selection.md, profiles/author-voice.yaml을 참고해 한국어 원고를 작성한다. 사회·문화·상황·시간·관계 맥락을 이해하고 화자의 가치관과 감정의 이유를 실제 한국어 어휘·조사·어미·리듬에 연결한다. 본문이 밝혀줄 새로운 관찰을 도입에서 제시하고, 자료를 근거로 활용하며 완성 원고를 출력한다.
+SKILL.md와 knowledge/voice-priority.md를 읽고 한국어 원고를 작성한다. 독자가 가장 궁금해할 것과 필자가 실제로 하고 싶은 말을 먼저 정한다. 흥미로운 상황·관점·반응으로 시작하고 필요한 때 근거를 꺼낸다. 독자가 단번에 알아듣는 자연스러운 말투로 완성한다.
 
-의뢰: [주제 / 독자 / 매체 / 근거 / 길이]
+의뢰: [주제 / 매체 / 근거 / 분량]
