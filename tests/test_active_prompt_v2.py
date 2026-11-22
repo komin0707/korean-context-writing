@@ -17,9 +17,9 @@ class ActivePromptV2Tests(unittest.TestCase):
         self.assertLess(len(content), 6500, "Old repeated references have returned")
         for key in CORE:
             self.assertIn(key,content)
-        self.assertIn("먼저 읽고 싶게 쓴다",content)
+        self.assertIn("이 소재에서만 나올 수 있는 생각",content)
         self.assertIn("답이 궁금해진 순간에는 바로 답한다",content)
-        self.assertIn("독자가 가장 재미있게 읽을 부분",content)
+        self.assertIn("소재에서만 나오는 신선한 생각",content)
 
     def test_extra_references_stay_archived_outside_writer_prompt(self):
         prompt=assemble_writer("생활 건강 칼럼","검증된 사실","")
@@ -46,12 +46,12 @@ class ActivePromptV2Tests(unittest.TestCase):
         self.assertLess(len(revised),6500)
         self.assertIn(draft,revised)
         self.assertIn("중요한 사실과 살아 있는 관점",revised)
-        self.assertIn("연구 설명은 필자의 주장에 필요한 순간",revised)
+        self.assertIn("연구 결과와 한계는 필자의 생각을 받치는 순간",revised)
         self.assertIn("연구 제한",revised)
 
     def test_reviewer_checks_exposition_burden(self):
         review=assemble_reviewer("공복 유산소","논문","승인 문체","본문")
-        self.assertIn("설명 분량이 실제 재미와 이해에 도움이 되는가",review)
+        self.assertIn("이 소재에서만 가능한 새롭고 날카로운 관찰",review)
         self.assertIn("truthfulness",review)
         self.assertIn("본문",review)
 
@@ -71,7 +71,7 @@ class ActivePromptV2Tests(unittest.TestCase):
             self.assertEqual(result.returncode,0,result.stderr)
             prompt=(Path(folder)/"01_writer_prompt.md").read_text(encoding="utf-8")
             self.assertLess(len(prompt),6500)
-            self.assertIn("먼저 읽고 싶게 쓴다",prompt)
+            self.assertIn("이 소재에서만 나올 수 있는 생각",prompt)
 
 if __name__=="__main__":
     unittest.main()

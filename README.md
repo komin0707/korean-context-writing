@@ -1,4 +1,4 @@
-# Korean Context Writing v2.0.0
+# Korean Context Writing v2.1.0
 
 실제 한국어를 쓰는 한 사람의 관점, 감정과 독자의 관심을 중심으로 하는 글쓰기 스킬.
 
