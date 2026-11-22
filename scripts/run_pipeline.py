@@ -26,17 +26,15 @@ def load_text(path: Path) -> str:
 
 
 def load_examples() -> str:
-    blocks = []
-    for name in ("approved", "partial", "rejected"):
-        path = ROOT / "examples" / f"{name}.jsonl"
-        items = [json.loads(line) for line in load_text(path).splitlines() if line.strip()]
-        blocks.append(f"[{name.upper()} — approval status MUST be respected]\n" +
-                      "\n".join(json.dumps(item, ensure_ascii=False) for item in items))
-    return "\n\n".join(blocks)
+    """Writer examples are restricted to user-confirmed approvals."""
+    path = ROOT / "examples" / "approved.jsonl"
+    items = [json.loads(line) for line in load_text(path).splitlines() if line.strip()]
+    approved = [item for item in items if item.get("status") == "approved"]
+    return "\n".join(json.dumps(item, ensure_ascii=False) for item in approved)
 
 
 def context() -> str:
-    return load_text(KNOWLEDGE / "editorial-voice.md") + "\n\n" + load_text(KNOWLEDGE / "creative-practice.md")
+    return load_text(KNOWLEDGE / "creative-practice.md")
 
 
 def approved_writer_context(genre: str, topic: str) -> str:

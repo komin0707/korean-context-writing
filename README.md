@@ -1,29 +1,28 @@
-# Korean Context Writing v1.4.0
+# Korean Context Writing — v1.5.0 (v1.2 핵심 복원)
 
-한국어의 사회적·심리적 맥락, 화자의 관점, 감정의 이유, 자연스러운 언어의 호흡을 하나의 글로 엮는 창작 스킬입니다.
+이 버전은 v1.2의 한국어 맥락 창작 구조를 기준으로 한다. **맥락, 화자의 가치관과 관점, 감정이 생기는 이유, 독자 입장과 공감, 자연스러운 한국어 말투, 후킹**을 글 속에서 서로 연결하는 것이 목표다.
 
-## 작성 경로
+## 작성에 사용되는 파일
 
-SKILL.md와 knowledge/editorial-voice.md, knowledge/creative-practice.md, profiles/author-voice.yaml, prompts/writer.md를 기준으로 작성합니다. 글의 출발점은 필자가 이 이야기를 꺼내는 이유가 되는 중심 관찰입니다. 원고의 목적과 매체는 실제 과제로부터 결정됩니다.
+- `SKILL.md`: v1.2의 중심 원칙과 10단계 사고 구조
+- `profiles/author-voice.yaml`: 화자의 가치 기준과 표현 습관
+- `knowledge/creative-practice.md`: 맥락과 실제 한국어 문장 선택의 연결
+- `prompts/writer.md`: 원고 작성 프롬프트
 
-사용자 승인이 확인된 문체 자료를 작성 경로에 활용합니다. 과거 거절 사례와 평가 기록은 저장소에서 별도로 보관합니다. 검수 모델은 작성된 원고를 읽고 긍정형 개선 방향을 도출합니다.
+작성 단계에는 긍정형 지침과 사용자에게 명확하게 승인된 사례만 전달한다. 편집 기록은 별도로 보관한다. 현재 승인된 전체 원고 표본은 부족하므로 실제 문체의 만족도는 사용자 검증이 필요하다.
 
 ## 실행
 
+```bash
 python3 scripts/validate_package.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 scripts/run_pipeline.py --genre 건강정보 --task '만 보 걷기 원고 작성' --prepare-only --output writing_output
+```
 
-python3 -m unittest discover -s tests -p test_*.py
+`writing_output/01_writer_prompt.md`가 작성용 프롬프트다. `--prepare-only`는 모델을 호출하지 않는다. 실제 LLM 호출 방법은 `python3 scripts/run_pipeline.py --help`에서 확인할 수 있다.
 
-python3 scripts/run_pipeline.py --task '하루 만 보 목표를 재해석한 글' --genre 건강정보 --prepare-only --output writing_output
+Claude Code에서는 프로젝트의 `.claude/skills/korean-context-writing/` 아래에 설치한다. Work나 일반 LLM은 위 작성 자료를 접근 가능한 작업 공간에 넣고 `prompts/WORK_START.md`를 사용한다.
 
-writing_output/01_writer_prompt.md에 작성 지침이 준비됩니다. 외부 작성 모델을 연결하려면 scripts/run_pipeline.py --help를 참고합니다.
+사용자의 평가를 기록하려면 `scripts/feedback_memory.py record`를 사용한다. 현재 GitHub 저장소는 **공개** 상태이므로 저장하는 내용의 공개 적합성을 확인해야 한다. 동기화 방법은 `SETUP_PERSISTENCE.md`를 따른다.
 
-## 다른 LLM에서 사용
-
-Claude Code에서 폴더를 프로젝트의 .claude/skills/korean-context-writing 아래에 둡니다. Work와 일반 LLM에서는 SKILL.md 및 실행 자료를 작업공간에 제공하고 prompts/WORK_START.md를 사용합니다.
-
-## 누적 피드백
-
-scripts/feedback_memory.py record 명령으로 사용자가 명시적으로 평가한 사례를 저장합니다. 현재 GitHub 저장소는 공개이므로 기록 내용은 외부에서도 열람할 수 있습니다.
-
-기능 테스트는 실행 경로와 파일 구성을 확인합니다. 실제 LLM의 문체·공감·독자 반응은 생성 원고에 대한 평가로 따로 검증합니다.
+기능 테스트는 스킬 구성과 프롬프트 주입·피드백 격리를 검사한다. 실제 Opus 원고의 자연스러움·감정·공감·후킹은 별도 실사용 검증 대상이다.
