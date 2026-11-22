@@ -1,4 +1,4 @@
-# Korean Context Writing — v1.5.1 (v1.2 핵심 복원)
+# Korean Context Writing — v1.6.0 (v1.2 핵심 복원)
 
 이 버전은 v1.2의 한국어 맥락 창작 구조를 기준으로 한다. **맥락, 화자의 가치관과 관점, 감정이 생기는 이유, 독자 입장과 공감, 자연스러운 한국어 말투, 후킹**을 글 속에서 서로 연결하는 것이 목표다.
 
@@ -6,7 +6,7 @@
 
 - `SKILL.md`: v1.2의 중심 원칙과 10단계 사고 구조
 - `profiles/author-voice.yaml`: 화자의 가치 기준과 표현 습관
-- `knowledge/creative-practice.md`: 맥락, 실제 한국어 주어·동사·연어·조사·어미와 문장 사이의 연결
+- `knowledge/creative-practice.md, knowledge/korean-expression.md, knowledge/emotion-and-reader.md`: 맥락, 실제 한국어 주어·동사·연어·조사·어미와 문장 사이의 연결
 - `prompts/writer.md`: 원고 작성 프롬프트
 
 작성 단계에는 긍정형 지침과 사용자에게 명확하게 승인된 사례만 전달한다. 편집 기록은 별도로 보관한다. 현재 승인된 전체 원고 표본은 부족하므로 실제 문체의 만족도는 사용자 검증이 필요하다.

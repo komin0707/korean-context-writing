@@ -15,8 +15,8 @@ class KoreanSentenceGuidanceTests(unittest.TestCase):
                 '--prepare-only', '--output', tmp], capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
             prompt=(Path(tmp)/'01_writer_prompt.md').read_text(encoding='utf-8')
-            for token in ('한국어 문장 선택의 실제 기준','주어와 서술어','연어와 조사',
-                          '화자의 반응은 실제 발화의 기능으로 드러난다','문장과 문장 사이의 관계'):
+            for token in ('실제 한국어 표현을 고르는 과정','주어와 동사의 관계','조사와 말끝의 맥락',
+                          '문장 사이의 실제 관계','감정의 원인과 강도'):
                 self.assertIn(token,prompt)
             for rejected in ('컵으로 마시는 몫','물 마시기 앱은 내가 점심에 곰탕'):
                 self.assertNotIn(rejected,prompt)
@@ -27,7 +27,7 @@ class KoreanSentenceGuidanceTests(unittest.TestCase):
         review={'revision_priority':'문장 호흡','issues':[{'repair':'행동을 나타내는 동사를 골라 뜻을 전달한다'}],
                 'what_to_preserve':['자료의 수치']}
         prompt=assemble_reviser('건강정보 원고','근거자료','실제 원고',review)
-        self.assertIn('한국어 문장 선택의 실제 기준',prompt)
+        self.assertIn('실제 한국어 표현을 고르는 과정',prompt)
         self.assertIn('행동을 나타내는 동사',prompt)
 
 if __name__=='__main__':
