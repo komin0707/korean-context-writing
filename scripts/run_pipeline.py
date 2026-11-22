@@ -120,6 +120,7 @@ def assemble_reviser(task: str, sources: str, draft: str, review: dict) -> str:
         "preserve": review.get("what_to_preserve", []),
     }
     return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
+            "# KOREAN LANGUAGE CONTEXT\n" + context() + "\n\n" +
             fill(load_text(PROMPTS / "reviser.md"), TASK=task, SOURCES=sources,
                  DRAFT=draft, REVIEW=json.dumps(actions, ensure_ascii=False, indent=2)))
 
