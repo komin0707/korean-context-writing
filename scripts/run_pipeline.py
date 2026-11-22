@@ -36,7 +36,7 @@ def load_examples() -> str:
 
 
 def context() -> str:
-    return load_text(KNOWLEDGE / "creative-practice.md")
+    return load_text(KNOWLEDGE / "form-selection.md") + "\n\n" + load_text(KNOWLEDGE / "creative-practice.md")
 
 
 def approved_writer_context(genre: str, topic: str) -> str:
