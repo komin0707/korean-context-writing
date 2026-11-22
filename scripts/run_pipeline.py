@@ -34,7 +34,7 @@ def load_examples() -> str:
 
 
 def context() -> str:
-    return "\n\n".join(load_text(KNOWLEDGE / name) for name in ("creative-practice.md", "korean-expression.md", "emotion-and-reader.md", "reader-imagination.md"))
+    return "\n\n".join(load_text(KNOWLEDGE / name) for name in ("creative-practice.md", "korean-expression.md", "emotion-and-reader.md", "reader-imagination.md", "evidence-selection.md"))
 
 
 def approved_writer_context(genre: str, topic: str) -> str:
