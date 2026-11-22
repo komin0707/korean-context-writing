@@ -15,7 +15,7 @@ class PromptIntegrationTests(unittest.TestCase):
             memory=(Path(temp)/'00_selected_memory.md').read_text(encoding='utf-8')
             self.assertNotIn('물 마시기 앱은 내가 점심에 곰탕',prompt)
             self.assertIn('화자 프로필',memory)
-            self.assertIn('물 마시기 앱은 내가 점심에 곰탕', (Path(temp)/'00_reviewer_memory.md').read_text(encoding='utf-8'))
+            self.assertNotIn('물 마시기 앱은 내가 점심에 곰탕', (Path(temp)/'00_reviewer_memory.md').read_text(encoding='utf-8'))
             self.assertNotIn('이 사람 이미 차석으로 붙었는데?',memory)
 if __name__=='__main__':
     unittest.main()

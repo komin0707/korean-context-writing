@@ -36,7 +36,7 @@ def load_examples() -> str:
 
 
 def context() -> str:
-    return load_text(KNOWLEDGE / "form-selection.md") + "\n\n" + load_text(KNOWLEDGE / "creative-practice.md")
+    return load_text(KNOWLEDGE / "editorial-voice.md") + "\n\n" + load_text(KNOWLEDGE / "creative-practice.md")
 
 
 def approved_writer_context(genre: str, topic: str) -> str:
@@ -144,7 +144,7 @@ def main() -> int:
 
     sources = load_text(Path(args.sources_file)) if args.sources_file else "확인된 근거와 화자의 해석을 구분하고 검증 범위를 정확하게 전한다."
     refs = approved_writer_context(args.genre, args.task)
-    reviewer_refs = context_text(args.genre, args.task)
+    reviewer_refs = refs
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
     (out / "00_selected_memory.md").write_text(refs, encoding="utf-8")
