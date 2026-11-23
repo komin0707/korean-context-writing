@@ -31,6 +31,12 @@ class ReferenceLedVoiceTests(unittest.TestCase):
         self.assertIn('생각의 생동감',prompt)
         self.assertLess(len(prompt),6500)
 
+    def test_direct_skill_entrypoints_open_reference(self):
+        for entry in ('SKILL.md', 'CLAUDE_PROJECT_INSTRUCTIONS.md',
+                      'prompts/QUICK_START.md', 'prompts/WORK_START.md'):
+            self.assertIn('knowledge/story-motion.md',
+                          (ROOT/entry).read_text(encoding='utf-8'))
+
     def test_reviser_uses_same_reasoning_not_a_four_step_card(self):
         prompt=assemble_reviser('이슈 논평','근거','초안',{
              'issues':[{'repair':'글의 웃긴 장면을 더 선명하게'}],
