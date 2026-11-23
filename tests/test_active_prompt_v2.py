@@ -46,7 +46,7 @@ class ActivePromptV2Tests(unittest.TestCase):
         self.assertLess(len(revised),6500)
         self.assertIn(draft,revised)
         self.assertIn("중요한 사실과 살아 있는 관점",revised)
-        self.assertIn("연구 결과와 한계는 필자의 생각을 받치는 순간",revised)
+        self.assertIn("연구에서 필요한 결론은 필자의 생각을 받치는 순간",revised)
         self.assertIn("연구 제한",revised)
 
     def test_reviewer_checks_exposition_burden(self):

@@ -37,6 +37,16 @@ class ReferenceLedVoiceTests(unittest.TestCase):
             self.assertIn('knowledge/story-motion.md',
                           (ROOT/entry).read_text(encoding='utf-8'))
 
+    def test_research_notes_do_not_dominate_community_voice(self):
+        refs=approved_writer_context('건강정보','운동 후 단백질 쉐이크 커뮤니티 글')
+        p=assemble_writer('운동 후 단백질 쉐이크 커뮤니티 글',
+                          '메타분석 연구 수 23건, 525명. 섭취 타이밍보다 총량이 중요할 수 있음.',refs)
+        self.assertIn('논문을 소개하는 사람이 아니라',p)
+        self.assertIn('논문의 이름·연도·표본·통계',p)
+        self.assertIn('실제 경험이 주어지지 않았다면',p)
+        self.assertIn('메타분석 연구 수 23건',p)
+        self.assertIn('근데 시발 내가 왜 안심함?',p)
+
     def test_reviser_uses_same_reasoning_not_a_four_step_card(self):
         prompt=assemble_reviser('이슈 논평','근거','초안',{
              'issues':[{'repair':'글의 웃긴 장면을 더 선명하게'}],

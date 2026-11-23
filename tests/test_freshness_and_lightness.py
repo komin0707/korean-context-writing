@@ -29,7 +29,7 @@ class FreshnessAndLightnessTests(unittest.TestCase):
             "what_to_preserve":["체액 균형 측정 결과"],
             "revision_priority":"신선한 관점"})
         self.assertIn("이 소재에서만 가능한 이상한 점",edit)
-        self.assertIn("연구 결과와 한계",edit)
+        self.assertIn("연구 설계·표본·효과 크기의 상세 설명은 독자의 판단을 바꿀 때만",edit)
         reviewer=assemble_reviewer("커피 이야기","근거","승인된 문체","초안")
         self.assertIn("이 소재에서만 가능한 새롭고 날카로운 관찰",reviewer)
         self.assertIn("친구에게 보내고 싶거나 반박하고 싶은",reviewer)
