@@ -25,13 +25,13 @@ class FreshnessAndLightnessTests(unittest.TestCase):
         self.assertIn("화자의 실제 반응에 따라",p)
     def test_reviser_and_reviewer_demand_specific_originality(self):
         edit=assemble_reviser("커피 이야기","원자료","초안",{
-            "issues":[{"repair":"독자가 반박할 만한 구체적 상황에 먼저 주목한다"}],
-            "what_to_preserve":["체액 균형 측정 결과"],
+            "issues":[{"span":"초안","repair":"독자가 반박할 만한 구체적 상황에 먼저 주목한다"}],
+            "preserve":["체액 균형 측정 결과"],
             "revision_priority":"신선한 관점"})
         self.assertIn("이 소재에서만 가능한 이상한 점",edit)
         self.assertIn("연구 결과와 한계",edit)
         reviewer=assemble_reviewer("커피 이야기","근거","승인된 문체","초안")
-        self.assertIn("이 소재에서만 가능한 새롭고 날카로운 관찰",reviewer)
-        self.assertIn("친구에게 보내고 싶거나 반박하고 싶은",reviewer)
+        self.assertIn("이 소재에만 있는 흥미로운 관찰",reviewer)
+        self.assertIn("비유만 바꿔 반복",reviewer)
 if __name__=='__main__':
     unittest.main()

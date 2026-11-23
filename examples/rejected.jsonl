@@ -1,7 +1,0 @@
-{"id":"reject_001","genre":"건강/생활정보 블로그","quote":"2020 한국인 영양소 섭취기준에서 19~49세가 하루에 물과 음료로 마시는 충분섭취량은 남성 1.2L, 여성 1.0L다.","reason":"첫 문장을 기준과 수치로 시작해 근거 요약문만 이어짐; 글쓴이 목소리/독자의 읽을 이유 부족","source":"rejected_articles/04_dry_table.md"}
-{"id":"reject_002","genre":"생활정보 블로그","quote":"물 마시기 앱은 내가 점심에 곰탕 먹은 걸 모른다","reason":"사용자가 거절한 가짜 1인칭 체험과 앱 의인화. 사람다운 관찰이 아니라 꾸며낸 도입","source":"앞선 사용자 피드백"}
-{"id":"reject_003","genre":"생활정보 블로그","quote":"못 채운 날엔 괜히 찜찜하고.","reason":"실제 독자 감정을 확인 없이 만들어 서술함","source":"rejected_articles/03_fake_emotion.md"}
-{"id":"reject_004","genre":"생활정보 블로그","quote":"컵으로 마시는 몫","reason":"쉬운 말처럼 보이나 자연스러운 연어와 화자의 실제 사용 감각 부족","source":"rejected_articles/05_no_voice.md"}
-{"id":"reject_005","genre":"생활정보 블로그","quote":"매일 양을 재지 않아도 몸이 신호를 준다.","reason":"개성 없는 건강 콘텐츠식 정리. 원고 마지막에 기계적으로 붙인 구호","source":"rejected_articles/05_no_voice.md"}
-{"id":"reject_006","genre":"생활정보 블로그","quote":"다음에 누가 '물은 하루 2L'라고 하면 하나만 되물어 보면 된다.","reason":"본문에서 자연스럽게 도출되지 않은 교훈형 마무리","source":"rejected_articles/03_fake_emotion.md"}
-{"id":"reject_007","genre":"생활정보 블로그","quote":"그럴 필요 없다. '하루 2L'를 맹물로만 채우려고 하면, 원래 다른 걸 세던 숫자를 엉뚱한 칸에 넣게 된다.","reason":"즉답에 맞춰 문체가 보고서로 변하고 '엉뚱한 칸' 비유가 어색함","source":"rejected_articles/05_no_voice.md"}

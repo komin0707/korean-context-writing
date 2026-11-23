@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""Model-agnostic writing loop. Standard library only.
-
-The runner DOES NOT supply an LLM. Configure command-line model clients that
-accept a prompt on stdin and print an answer to stdout, or use --prepare-only.
-"""
+"""v3.0 writing pipeline: no personal-memory loading or mandatory review."""
 from __future__ import annotations
-
 import argparse
 import datetime
 import json
@@ -14,194 +9,175 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
-from feedback_memory import context_text, canonical_genre, pick_entries
+from revision_guard import check_revision
 
 ROOT = Path(__file__).resolve().parents[1]
-PROMPTS = ROOT / "prompts"
-KNOWLEDGE = ROOT / "knowledge"
-
-
-def load_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
-def load_examples() -> str:
-    """Writer examples are restricted to user-confirmed approvals."""
-    path = ROOT / "examples" / "approved.jsonl"
-    items = [json.loads(line) for line in load_text(path).splitlines() if line.strip()]
-    approved = [item for item in items if item.get("status") == "approved"]
-    return "\n".join(json.dumps(item, ensure_ascii=False) for item in approved)
-
+def load_text(p: Path) -> str:
+    return p.read_text(encoding="utf-8")
 
 def context() -> str:
-    return load_text(KNOWLEDGE / "voice-priority.md")
-
-
-def approved_writer_context(genre: str, topic: str) -> str:
-    approved = [x for x in pick_entries(genre, topic, limit_per_status=4)
-                if x.get("status") == "approved"]
-    if not approved:
-        return "화자 프로필과 긍정형 실행 지침을 바탕으로 고유한 관점을 형성한다."
-    return "\n".join(
-        f"사용자가 승인한 문체 (소재: {x.get('topic', '')}): {x['quote']}"
-        for x in approved
-    )
-
+    return load_text(ROOT/"knowledge/voice-priority.md")
 
 def fill(template: str, **values: str) -> str:
-    for key, value in values.items():
-        template = template.replace("{{" + key + "}}", value)
-    if re.search(r"\{\{[A-Z_]+\}\}", template):
-        raise ValueError("Unresolved prompt placeholders")
+    for k,v in values.items():
+        template=template.replace("{{"+k+"}}",v)
+    if re.search(r"\{\{[A-Z_]+\}\}",template):
+        raise ValueError("Unresolved prompt placeholder")
     return template
 
-
 def run_command(command: str, prompt: str, timeout: int) -> str:
-    argv = shlex.split(command)
-    if not argv:
-        raise ValueError("empty model command")
-    result = subprocess.run(argv, input=prompt, capture_output=True, text=True,
-                            encoding="utf-8", timeout=timeout, check=False)
-    if result.returncode != 0:
-        raise RuntimeError(f"Model command returned {result.returncode}: {result.stderr[-700:]}")
+    args=shlex.split(command)
+    if not args:
+        raise ValueError("Empty model command")
+    result=subprocess.run(args,input=prompt,text=True,capture_output=True,
+                          encoding="utf-8",timeout=timeout,check=False)
+    if result.returncode:
+        raise RuntimeError("Model failed: "+result.stderr[-700:])
     if not result.stdout.strip():
-        raise RuntimeError("Model command returned empty stdout")
+        raise RuntimeError("Model returned empty output")
     return result.stdout.strip()
 
-
 def parse_review(raw: str, draft: str) -> dict:
-    raw = raw.strip()
-    raw = re.sub(r"^```(?:json)?\s*", "", raw)
-    raw = re.sub(r"\s*```$", "", raw)
-    item = json.loads(raw)
-    if item.get("decision") not in {"revise", "provisional", "needs_evidence"}:
-        raise ValueError("review.decision must be revise/provisional/needs_evidence")
-    expected = {"context", "stance", "voice", "empathy", "hook", "truthfulness"}
-    scores = item.get("scores", {})
-    if set(scores) != expected or any(type(scores[x]) is not int or scores[x] not in range(4) for x in expected):
-        raise ValueError("review.scores must contain six integer 0-3 ratings")
-    issues = item.get("issues")
-    if not isinstance(issues, list) or not issues:
-        raise ValueError("review must include at least one evidence-based issue")
-    for issue in issues:
-        span = issue.get("span", "").strip()
-        if not span or span not in draft:
-            raise ValueError(f"review span is not in draft: {span[:70]!r}")
-        if not issue.get("problem") or not issue.get("repair"):
-            raise ValueError("review issue missing problem/repair")
-    if scores["truthfulness"] == 0:
-        item["decision"] = "revise"
-    if any(v == 0 for v in scores.values()):
-        item["decision"] = "revise"
-    if any(scores[k] <= 2 for k in ("voice", "empathy", "stance", "hook")):
-        item["decision"] = "revise"
-    if any(issue.get("severity") == "major" for issue in issues):
-        item["decision"] = "revise"
+    fence=chr(96)*3
+    raw=raw.strip()
+    if raw.startswith(fence):
+        raw=re.sub(r"^"+fence+r"(?:json)?\s*","",raw)
+        raw=re.sub(r"\s*"+fence+r"$","",raw)
+    item=json.loads(raw)
+    if item.get("decision") not in {"accept","revise","needs_evidence"}:
+        raise ValueError("Bad decision")
+    issues=item.get("issues",[])
+    if not isinstance(issues,list) or len(issues)>3:
+        raise ValueError("At most three review issues")
+    for x in issues:
+        if not isinstance(x,dict) or not isinstance(x.get("span"),str) or not x["span"].strip() or x["span"] not in draft:
+            raise ValueError("Issue span must be exact excerpt of the draft")
+        if x.get("severity") not in {"major","minor"} or not x.get("problem") or not x.get("repair"):
+            raise ValueError("Issue must have severity, problem, and repair")
+    if item["decision"]=="revise" and not any(x["severity"]=="major" for x in issues):
+        raise ValueError("Revision requires grounded major issue")
+    if item["decision"]=="accept" and any(x["severity"]=="major" for x in issues):
+        raise ValueError("Accept cannot include major issue")
+    preserve=item.get("preserve",[])
+    if not isinstance(preserve,list) or not all(isinstance(x,str) for x in preserve):
+        raise ValueError("preserve must be list of strings")
     return item
 
+def assemble_writer(task: str, sources: str, references: str = "") -> str:
+    material=("# KOREAN WRITING SKILL\n"+load_text(ROOT/"SKILL.md")
+            +"\n# VOICE PRIORITIES\n"+context()
+            +"\n# OPTIONAL CRAFT LENSES\n"+load_text(ROOT/"knowledge/craft-lenses.md")
+            +"\n"+fill(load_text(ROOT/"prompts/writer.md"),TASK=task,SOURCES=sources))
+    if references.strip():
+        material+="\n# REFERENCES SUPPLIED IN THIS REQUEST\n"+references
+    return material
 
-def assemble_writer(task: str, sources: str, references: str) -> str:
-    template = load_text(PROMPTS / "writer.md")
-    return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
-            "# KNOWLEDGE\n" + context() + "\n\n" +
-            fill(template, TASK=task, SOURCES=sources, STYLE_REFERENCES=references,
-                 AUTHOR_PROFILE=load_text(ROOT / "profiles" / "author-voice.yaml")))
-
+def assemble_polisher(task: str, sources: str, draft: str) -> str:
+    return fill(load_text(ROOT/"prompts/polisher.md"),TASK=task,SOURCES=sources,DRAFT=draft)
 
 def assemble_reviewer(task: str, sources: str, references: str, draft: str) -> str:
-    return fill(load_text(PROMPTS / "reviewer.md"), TASK=task, SOURCES=sources,
-                STYLE_REFERENCES=references, DRAFT=draft)
-
+    prompt=fill(load_text(ROOT/"prompts/reviewer.md"),TASK=task,SOURCES=sources,DRAFT=draft)
+    return prompt+("\n이번 작업에서 제공된 참고:\n"+references if references.strip() else "")
 
 def assemble_reviser(task: str, sources: str, draft: str, review: dict) -> str:
-    actions = {
-        "direction": review.get("revision_priority", ""),
-        "improvements": [x.get("repair", "") for x in review.get("issues", [])],
-        "preserve": review.get("what_to_preserve", []),
-    }
-    return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
-            "# KOREAN LANGUAGE CONTEXT\n" + context() + "\n\n" +
-            fill(load_text(PROMPTS / "reviser.md"), TASK=task, SOURCES=sources,
-                 DRAFT=draft, REVIEW=json.dumps(actions, ensure_ascii=False, indent=2)))
-
+    instructions={"issues":[{"span":x["span"],"repair":x["repair"]} for x in review.get("issues",[])],
+                  "preserve":review.get("preserve",[])}
+    return fill(load_text(ROOT/"prompts/reviser.md"),
+                TASK=task,SOURCES=sources,DRAFT=draft,
+                REVIEW=json.dumps(instructions,ensure_ascii=False,indent=2))
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Korean-writing loop: prepare prompts or run configured external LLM CLIs")
-    parser.add_argument("--task", required=True, help="Writing request")
-    parser.add_argument("--genre", required=True, help="Genre for durable-feedback retrieval: e.g. 건강정보 / 이슈논평 / 감정경험")
-    parser.add_argument("--sources-file", help="UTF-8 source notes text path")
-    parser.add_argument("--writer-cmd", help="LLM CLI command, prompt via stdin")
-    parser.add_argument("--reviewer-cmd", help="Independent LLM CLI command, prompt via stdin")
-    parser.add_argument("--prepare-only", action="store_true", help="No model calls; generate ready-to-use stage prompts")
-    parser.add_argument("--max-revisions", type=int, default=2, choices=(0, 1, 2))
-    parser.add_argument("--timeout", type=int, default=180, help="Per command timeout in seconds")
-    parser.add_argument("--output", default="writing_output", help="Output directory")
-    args = parser.parse_args()
-
-    if not args.prepare_only and (not args.writer_cmd or not args.reviewer_cmd):
-        parser.error("Set --prepare-only or provide BOTH --writer-cmd and --reviewer-cmd")
-
-    sources = load_text(Path(args.sources_file)) if args.sources_file else "확인된 근거와 화자의 해석을 구분하고 검증 범위를 정확하게 전한다."
-    refs = approved_writer_context(args.genre, args.task)
-    reviewer_refs = refs
-    out = Path(args.output).resolve()
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "00_selected_memory.md").write_text(refs, encoding="utf-8")
-    (out / "00_reviewer_memory.md").write_text(reviewer_refs, encoding="utf-8")
-    writer_prompt = assemble_writer(args.task, sources, refs)
-    (out / "01_writer_prompt.md").write_text(writer_prompt, encoding="utf-8")
-
+    parser=argparse.ArgumentParser(description="v3 draft or conservative polish")
+    parser.add_argument("--task",required=True)
+    parser.add_argument("--genre",default="일반",help="Metadata only; no memory lookup")
+    parser.add_argument("--mode",choices=("draft","polish"),default="draft")
+    parser.add_argument("--draft-file")
+    parser.add_argument("--sources-file")
+    parser.add_argument("--style-file",help="Explicit reference supplied for current task")
+    parser.add_argument("--writer-cmd")
+    parser.add_argument("--reviewer-cmd",help="Optional external reviewer")
+    parser.add_argument("--prepare-only",action="store_true")
+    parser.add_argument("--max-revisions",type=int,choices=(0,1),default=1)
+    parser.add_argument("--timeout",type=int,default=180)
+    parser.add_argument("--output",default="writing_output")
+    args=parser.parse_args()
+    if args.mode=="polish" and not args.draft_file:
+        parser.error("--mode polish requires --draft-file")
+    if not args.prepare_only and not args.writer_cmd:
+        parser.error("Specify --writer-cmd or --prepare-only")
+    sources=load_text(Path(args.sources_file)) if args.sources_file else "제공된 근거가 없다면 수치나 개인 경험을 창작하지 않는다."
+    references=load_text(Path(args.style_file)) if args.style_file else ""
+    original=load_text(Path(args.draft_file)) if args.mode=="polish" else ""
+    out=Path(args.output).resolve()
+    out.mkdir(parents=True,exist_ok=True)
+    if args.mode=="polish":
+        (out/"original.md").write_text(original,encoding="utf-8")
+        prompt=assemble_polisher(args.task,sources,original)
+        prompt_name="01_polisher_prompt.md"
+    else:
+        prompt=assemble_writer(args.task,sources,references)
+        prompt_name="01_writer_prompt.md"
+    (out/prompt_name).write_text(prompt,encoding="utf-8")
     if args.prepare_only:
-        (out / "02_reviewer_prompt_template.md").write_text(load_text(PROMPTS / "reviewer.md"), encoding="utf-8")
-        (out / "03_reviser_prompt_template.md").write_text(load_text(PROMPTS / "reviser.md"), encoding="utf-8")
-        print("Prompt bundle saved:", out)
-        print("No LLM called; no quality claim is possible.")
+        for number,name in [("02","reviewer"),("03","reviser")]:
+            (out/(number+"_"+name+"_prompt_template.md")).write_text(
+                load_text(ROOT/("prompts/"+name+".md")),encoding="utf-8")
+        print("Prompts prepared; no LLM called:",out)
         return 0
 
-    writer = run_command(args.writer_cmd, writer_prompt, args.timeout)
-    (out / "draft_0.md").write_text(writer + "\n", encoding="utf-8")
-    outcome = "MODEL_REVIEW_PROVISIONAL"
-    run_log = []
-    for attempt in range(args.max_revisions + 1):
-        rp = assemble_reviewer(args.task, sources, reviewer_refs, writer)
-        (out / f"review_prompt_{attempt}.md").write_text(rp, encoding="utf-8")
-        raw = run_command(args.reviewer_cmd, rp, args.timeout)
-        (out / f"review_raw_{attempt}.txt").write_text(raw, encoding="utf-8")
+    current=run_command(args.writer_cmd,prompt,args.timeout)
+    (out/"draft_0.md").write_text(current+"\n",encoding="utf-8")
+    status="UNREVIEWED_MODEL_OUTPUT"
+    events=[]
+    if args.mode=="polish":
+        gate=check_revision(original,current)
+        (out/"edit_guard_0.json").write_text(json.dumps(gate,ensure_ascii=False,indent=2),encoding="utf-8")
+        if not gate["pass"]:
+            current=original
+            status="POLISH_ROLLED_BACK_PROTECTED_CONTENT"
+            events.append({"step":"polish","failures":gate["failures"]})
+    if args.reviewer_cmd and status=="UNREVIEWED_MODEL_OUTPUT":
+        rp=assemble_reviewer(args.task,sources,references,current)
+        (out/"review_prompt_0.md").write_text(rp,encoding="utf-8")
+        raw=run_command(args.reviewer_cmd,rp,args.timeout)
+        (out/"review_raw_0.txt").write_text(raw,encoding="utf-8")
         try:
-            review = parse_review(raw, writer)
-        except (ValueError, json.JSONDecodeError) as exc:
-            outcome = "REVIEW_INVALID_NEEDS_HUMAN_CHECK"
-            run_log.append({"attempt": attempt, "error": str(exc)})
-            break
-        (out / f"review_{attempt}.json").write_text(json.dumps(review, ensure_ascii=False, indent=2), encoding="utf-8")
-        run_log.append({"attempt": attempt, "decision": review["decision"], "scores": review["scores"]})
-        if review["decision"] == "provisional":
-            break
-        if review["decision"] == "needs_evidence":
-            outcome = "REQUIRES_MORE_EVIDENCE"
-            break
-        if attempt == args.max_revisions:
-            outcome = "REVIEW_FAILED_MAX_REVISIONS"
-            break
-        revision_prompt = assemble_reviser(args.task, sources, writer, review)
-        (out / f"reviser_prompt_{attempt}.md").write_text(revision_prompt, encoding="utf-8")
-        writer = run_command(args.writer_cmd, revision_prompt, args.timeout)
-        (out / f"draft_{attempt + 1}.md").write_text(writer + "\n", encoding="utf-8")
+            review=parse_review(raw,current)
+        except (ValueError,json.JSONDecodeError) as exc:
+            status="REVIEW_INVALID_NEEDS_HUMAN_CHECK"
+            events.append({"step":"review","error":str(exc)})
+        else:
+            (out/"review_0.json").write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding="utf-8")
+            decision=review["decision"]
+            if decision=="accept":
+                status="MODEL_REVIEW_PROVISIONAL"
+            elif decision=="needs_evidence":
+                status="REQUIRES_MORE_EVIDENCE"
+            elif args.max_revisions==0:
+                status="REVIEW_RECOMMENDS_REVISION"
+            else:
+                edit=assemble_reviser(args.task,sources,current,review)
+                (out/"reviser_prompt_0.md").write_text(edit,encoding="utf-8")
+                candidate=run_command(args.writer_cmd,edit,args.timeout)
+                (out/"draft_1.md").write_text(candidate+"\n",encoding="utf-8")
+                gate=check_revision(current,candidate)
+                (out/"edit_guard_1.json").write_text(json.dumps(gate,ensure_ascii=False,indent=2),encoding="utf-8")
+                if gate["pass"]:
+                    current=candidate
+                    status="MODEL_REVISED_UNVERIFIED"
+                else:
+                    status="REVISION_ROLLED_BACK_PROTECTED_CONTENT"
+                    events.append({"step":"revision","failures":gate["failures"]})
+    (out/"final_draft.md").write_text(current.rstrip()+"\n",encoding="utf-8")
+    (out/"run_status.json").write_text(json.dumps({
+        "status":status,"human_approved":False,"model_quality_verified":False,
+        "mode":args.mode,"genre":args.genre,"personal_memory_used":False,
+        "auto_examples_used":False,
+        "timestamp":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "events":events},ensure_ascii=False,indent=2),encoding="utf-8")
+    print("Final:",out/"final_draft.md")
+    print("Status:",status,"(not human-approved)")
+    return 0 if status in {"UNREVIEWED_MODEL_OUTPUT","MODEL_REVIEW_PROVISIONAL","MODEL_REVISED_UNVERIFIED"} else 2
 
-    (out / "final_draft.md").write_text(writer + "\n", encoding="utf-8")
-    (out / "run_status.json").write_text(json.dumps({
-        "status": outcome,
-        "human_approved": False,
-        "genre": canonical_genre(args.genre),
-        "persistent_memory": str(ROOT / "memory" / "feedback.jsonl"),
-        "independence_note": "Two separately invoked CLIs; separate models/sessions not technically verifiable by this script.",
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "attempts": run_log,
-    }, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("Draft:", out / "final_draft.md")
-    print("Review status:", outcome, "(NOT human-approved)")
-    return 0 if outcome == "MODEL_REVIEW_PROVISIONAL" else 2
-
-
-if __name__ == "__main__":
+if __name__=="__main__":
     sys.exit(main())

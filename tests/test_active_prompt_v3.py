@@ -41,8 +41,8 @@ class ActivePromptV2Tests(unittest.TestCase):
         draft="식후에 운동하는 사람의 몸은 어떤가?"
         revised=assemble_reviser("공복 유산소", "연구 근거",draft,{
             "revision_priority":"독자의 의문을 시원하게 해결",
-            "issues":[{"repair":"비교 결과를 생활 속 의미로 연결한다"}],
-            "what_to_preserve":["연구 제한"]})
+            "issues":[{"span":"식후에 운동하는 사람의 몸은 어떤가?","repair":"비교 결과를 생활 속 의미로 연결한다"}],
+            "preserve":["연구 제한"]})
         self.assertLess(len(revised),6500)
         self.assertIn(draft,revised)
         self.assertIn("중요한 사실과 살아 있는 관점",revised)
@@ -51,17 +51,18 @@ class ActivePromptV2Tests(unittest.TestCase):
 
     def test_reviewer_checks_exposition_burden(self):
         review=assemble_reviewer("공복 유산소","논문","승인 문체","본문")
-        self.assertIn("이 소재에서만 가능한 새롭고 날카로운 관찰",review)
-        self.assertIn("truthfulness",review)
+        self.assertIn("이 소재에만 있는 흥미로운 관찰",review)
+        self.assertIn("**사실:**",review)
         self.assertIn("본문",review)
 
-    def test_active_writer_guidance_is_affirmative(self):
-        for name in ("SKILL.md","knowledge/voice-priority.md","prompts/writer.md",
-                     "prompts/reviser.md","prompts/reviewer.md"):
+    def test_writer_keeps_active_prompts_small_and_unformulaic(self):
+        for name in ("knowledge/voice-priority.md","prompts/writer.md"):
             content=(ROOT/name).read_text(encoding="utf-8")
-            for phrase in ("금지","하지 마라","하지 않는다","피하라",
-                           "실패 사례","거절된 표현","모방하지"):
-                self.assertNotIn(phrase,content,name)
+            self.assertNotIn("근데 시발 내가 왜 안심함?",content)
+            self.assertNotIn("모든 글에 반전",content)
+        review=(ROOT/"prompts/reviewer.md").read_text(encoding="utf-8")
+        self.assertIn("최대 3개",review)
+        self.assertNotIn('"scores"',review)
 
     def test_prepare_cli_generates_small_prompt(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""Offline stub for pipeline wiring test ONLY; it never evaluates prose quality."""
+"""Offline fixture CLI for plumbing tests, never a prose-quality evaluation."""
 import json
 import sys
-
 role = sys.argv[1]
 prompt = sys.stdin.read()
-if role == "writer":
+if role in {"writer", "writer_rewrite"}:
     print("테스트용 문장입니다. 실제 품질은 평가하지 않습니다.")
+elif role == "copy_polish":
+    print(prompt.split("## 현재 원고\n", 1)[1].split("\n## 근거 자료", 1)[0].strip())
+elif role == "bad_polish":
+    print("2027년 이야기입니다. \"변경된 인용\"")
 elif role == "reviewer":
-    print(json.dumps({
-        "decision": "provisional",
-        "scores": dict.fromkeys(("context", "stance", "voice", "empathy", "hook", "truthfulness"), 2),
-        "issues": [{"severity": "minor", "span": "테스트용 문장입니다", "problem": "오프라인 실행 확인을 위한 인공 테스트 문장", "repair": "실제 LLM 품질 판정으로 사용하지 말 것"}],
-        "counterfactual": "테스트 해당 없음",
-        "what_to_preserve": ["테스트 문자열"],
-        "revision_priority": "없음",
-        "verification_note": "모의 검수이며 실제 LLM 품질 평가가 아니다"
-    }, ensure_ascii=False))
+    print(json.dumps({"decision":"accept", "issues":[], "preserve":["테스트용 문장입니다"], "note":"모의 응답"},ensure_ascii=False))
+elif role == "reviewer_major":
+    print(json.dumps({"decision":"revise", "issues":[{"severity":"major","span":"테스트용 문장입니다","problem":"모의 문제","repair":"모의 최소 수정"}], "preserve":[], "note":"모의 응답"},ensure_ascii=False))
+elif role == "reviewer_bad":
+    print(json.dumps({"decision":"revise", "issues":[{"severity":"major","span":"본문에 없는 문장","problem":"조작","repair":"수정"}]},ensure_ascii=False))
 else:
-    raise SystemExit("unknown mock role")
+    raise SystemExit("Unknown fixture role")
