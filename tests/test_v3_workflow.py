@@ -20,6 +20,13 @@ def model(role):
     return f"{sys.executable} {FIX} {role}"
 
 class V3WorkflowTests(unittest.TestCase):
+    def test_dc_tone_is_active_in_writer(self):
+        from run_pipeline import assemble_writer
+        prompt=assemble_writer("이슈를 커뮤니티용으로 논평", "사실 확인 자료")
+        self.assertIn("디시인사이드(DC)",prompt)
+        self.assertIn("반말",prompt)
+        self.assertIn("다른 문체를 명시적으로 요청받으면",prompt)
+        self.assertIn("억지",prompt)
     def test_revision_guard_quotes_and_korean_date_units(self):
         before='2013년 20명에게 물었다. “반드시 해야 한다”라는 말이었다.'
         after='2014년 20명에게 물었다. “해도 된다”라는 말이었다.'

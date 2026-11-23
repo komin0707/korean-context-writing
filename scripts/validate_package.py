@@ -16,7 +16,7 @@ def main():
         path=ROOT/rel
         assert path.is_file() and path.stat().st_size>20,f"Missing/empty {rel}"
     skill=(ROOT/"SKILL.md").read_text(encoding="utf-8")
-    assert skill.startswith("---\nname:") and 'version: "3.0.0"' in skill
+    assert skill.startswith("---\nname:") and 'version: "3.0.1"' in skill
     scenarios=[json.loads(line) for line in (ROOT/"tests/scenarios.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
     assert len(scenarios)>=10 and len({x["id"] for x in scenarios})==len(scenarios)
     for rel in ("SETUP_PERSISTENCE.md","memory/feedback.jsonl","scripts/feedback_memory.py","profiles/author-voice.yaml"):
