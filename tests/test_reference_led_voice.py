@@ -28,7 +28,7 @@ class ReferenceLedVoiceTests(unittest.TestCase):
         refs=approved_writer_context('건강정보',topic)
         prompt=assemble_writer(topic,'수분에 대한 근거',refs)
         self.assertNotIn('근데 시발 내가 왜 안심함?',prompt)
-        self.assertIn('생각의 생동감',prompt)
+        self.assertIn('자연스럽게 말로 튀어나오는 생기',prompt)
         self.assertLess(len(prompt),6500)
 
     def test_direct_skill_entrypoints_open_reference(self):
@@ -52,7 +52,7 @@ class ReferenceLedVoiceTests(unittest.TestCase):
              'issues':[{'repair':'글의 웃긴 장면을 더 선명하게'}],
              'what_to_preserve':['자연스러운 말끝'],
              'revision_priority':'관점을 살리기'})
-        self.assertIn('생각의 생동감',prompt)
+        self.assertIn('자연스럽게 말로 튀어나오는 생기',prompt)
         self.assertIn('자연스러운 말끝',prompt)
         self.assertNotIn('concrete_moment',prompt)
         self.assertLess(len(prompt),6500)
