@@ -40,12 +40,31 @@ def context() -> str:
 def approved_writer_context(genre: str, topic: str) -> str:
     approved = [x for x in pick_entries(genre, topic, limit_per_status=4)
                 if x.get("status") == "approved"]
-    if not approved:
-        return "화자 프로필과 긍정형 실행 지침을 바탕으로 고유한 관점을 형성한다."
-    return "\n".join(
+    parts = [
         f"사용자가 승인한 문체 (소재: {x.get('topic', '')}): {x['quote']}"
         for x in approved
+    ]
+    # An explicitly praised passage was saved as an approved excerpt, but was
+    # never actually sent to the author. Route it to community/issue prompts.
+    community_intent = (
+        canonical_genre(genre) == '이슈논평'
+        or any(term in topic for term in ('커뮤니티', '스레드', '디시', '게시글'))
     )
+    if community_intent:
+        selected = [x for x in
+                    (json.loads(line) for line in load_text(ROOT/'examples'/'approved.jsonl').splitlines() if line.strip())
+                    if x.get('status') == 'approved' and x.get('scope') == 'excerpt'
+                    and x.get('genre') == '이슈/커뮤니티 논평']
+        if selected:
+            parts.append("사용자가 원하는 말맛으로 직접 지목한 발췌 — 문장/욕설/줄바꿈/장 구성의 복제 대신 화자의 생각이 움직이는 이유만 참고:")
+            for item in selected[:3]:
+                parts.append(item['quote'])
+    return "\n".join(parts) if parts else "화자 프로필과 긍정형 실행 지침을 바탕으로 고유한 관점을 형성한다."
+
+
+def living_thought_context() -> str:
+    """Concise reasoning reference; same for writer and reviser."""
+    return load_text(KNOWLEDGE / "story-motion.md")
 
 
 def fill(template: str, **values: str) -> str:
@@ -81,8 +100,10 @@ def parse_review(raw: str, draft: str) -> dict:
     if set(scores) != expected or any(type(scores[x]) is not int or scores[x] not in range(4) for x in expected):
         raise ValueError("review.scores must contain six integer 0-3 ratings")
     issues = item.get("issues")
-    if not isinstance(issues, list) or not issues:
-        raise ValueError("review must include at least one evidence-based issue")
+    if not isinstance(issues, list):
+        raise ValueError("review issues must be a list")
+    if item.get("decision") == "revise" and not issues:
+        raise ValueError("revision requires at least one evidence-based issue")
     for issue in issues:
         span = issue.get("span", "").strip()
         if not span or span not in draft:
@@ -93,8 +114,8 @@ def parse_review(raw: str, draft: str) -> dict:
         item["decision"] = "revise"
     if any(v == 0 for v in scores.values()):
         item["decision"] = "revise"
-    if any(scores[k] <= 2 for k in ("voice", "empathy", "stance", "hook")):
-        item["decision"] = "revise"
+    # A 2/3 for a subjective category is feedback, not an automatic license
+    # to rewrite an already lively article into a complete explainer.
     if any(issue.get("severity") == "major" for issue in issues):
         item["decision"] = "revise"
     return item
@@ -104,6 +125,7 @@ def assemble_writer(task: str, sources: str, references: str) -> str:
     template = load_text(PROMPTS / "writer.md")
     return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
             "# KNOWLEDGE\n" + context() + "\n\n" +
+            "# SUCCESSFUL THOUGHT MOVEMENT\n" + living_thought_context() + "\n\n" +
             fill(template, TASK=task, SOURCES=sources, STYLE_REFERENCES=references,
                  AUTHOR_PROFILE=load_text(ROOT / "profiles" / "author-voice.yaml")))
 
@@ -121,6 +143,7 @@ def assemble_reviser(task: str, sources: str, draft: str, review: dict) -> str:
     }
     return ("# KOREAN WRITING SKILL\n" + load_text(ROOT / "SKILL.md") + "\n\n" +
             "# KOREAN LANGUAGE CONTEXT\n" + context() + "\n\n" +
+            "# SUCCESSFUL THOUGHT MOVEMENT\n" + living_thought_context() + "\n\n" +
             fill(load_text(PROMPTS / "reviser.md"), TASK=task, SOURCES=sources,
                  DRAFT=draft, REVIEW=json.dumps(actions, ensure_ascii=False, indent=2)))
 
