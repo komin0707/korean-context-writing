@@ -1,4 +1,4 @@
-# Korean Context Writing v3.1.0-preview
+# Korean Context Writing v3.1.1-preview
 
 소재에 맞는 생각을 찾는 **집필**과 이미 좋은 원고를 보존하는 **국소 윤문**을 나눈 한국어 글쓰기 스킬.
 
@@ -30,6 +30,23 @@
     python3 scripts/refresh_slang_candidates.py --years 2024 2025 2026
 
 새로 수집된 이름은 검토 전 후보이며, 실제 뜻·시기·용례를 자동 승인하지 않는다.
+
+## 디시 게시글 사용 맥락 조사 (추가 연구 브랜치)
+
+**디시 전체를 전수조사하지는 않았다.** 디시 이용약관의 사전 동의 없는 크롤링 제한 때문에, 공개 검색 색인에서 개별적으로 확인할 수 있는 사례와 사람이 읽은 일부 게시글만 분석했다.
+
+- research/dc_usage/indexed_usage_cases.jsonl — 여러 갤러리의 실제 표현을 날짜·발화 기능·사용 대상·주의점·근거 URL로 정리. 작성자 이름과 댓글 원문은 저장하지 않음.
+- research/dc_usage/pragmatic_patterns.md — 13개 발화 기능의 차이를 소재별로 해설.
+- research/dc_usage/coverage_report.md — 확인한 사례 수, 기간, 갤러리, 검토 수준, 불균형과 누락 범위.
+- research/dc_usage/study_protocol.md — 향후 서면 권한을 얻은 경우의 본 조사 설계.
+- scripts/dc_usage_context.py — 특정 유행어의 실제 게시글 맥락 0~3개를 독립 요약으로 조회.
+- scripts/report_dc_usage.py — 관측 범위를 다시 계산.
+- scripts/analyze_authorized_dc_export.py — 별도로 허가받은 JSONL 자료가 있을 때만 오프라인 건수 집계(네트워크·직접 크롤링 없음).
+
+    python3 scripts/dc_usage_context.py --terms 느좋 --asof 2026-11 --limit 3
+    python3 scripts/report_dc_usage.py
+
+기존 --slang-context를 지정하면 정리된 어휘 뜻과 함께 관련된 디시 사용 맥락 최대 3개까지 참고자료로 붙인다. 기본 집필은 이전처럼 유행어 목록을 자동 삽입하지 않는다. **현재 41개 사례 중 본문 전체 확인 13개, 색인 일부 확인 28개이고 댓글 전체 분석은 아직 0건이다.**
 
 ## 2.1에서 유지한 것
 

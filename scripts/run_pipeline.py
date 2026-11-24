@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from revision_guard import check_revision
 from select_slang import choose as choose_slang, usage_note as slang_usage_note
+from dc_usage_context import for_terms as dc_for_terms, render as dc_render
 
 ROOT = Path(__file__).resolve().parents[1]
 def load_text(p: Path) -> str:
@@ -126,6 +127,11 @@ def main() -> int:
                 json.dumps(selected,ensure_ascii=False,indent=2),encoding="utf-8")
             if selected:
                 prompt+="\n\n"+slang_usage_note(selected)+"\n"
+                dc_cases=dc_for_terms([x['term'] for x in selected], args.asof_month, max_cases=3)
+                (out/"00_dc_usage_examples.json").write_text(
+                    json.dumps(dc_cases,ensure_ascii=False,indent=2),encoding="utf-8")
+                if dc_cases:
+                    prompt+="\n\n"+dc_render(dc_cases)+"\n"
     (out/prompt_name).write_text(prompt,encoding="utf-8")
     if args.prepare_only:
         for number,name in [("02","reviewer"),("03","reviser")]:
