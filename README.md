@@ -1,10 +1,35 @@
-# Korean Context Writing v3.0.1
+# Korean Context Writing v3.1.0-preview
 
 소재에 맞는 생각을 찾는 **집필**과 이미 좋은 원고를 보존하는 **국소 윤문**을 나눈 한국어 글쓰기 스킬.
 
 ## 기본 말투
 
 별도 요청이 없는 커뮤니티·이슈 글은 **디시인사이드(DC) 반말·직설적인 게시글 말투**를 사용한다. ㅋㅋ·욕설·밈은 문맥에 맞을 때만 쓰며, 따로 지정된 문체가 있으면 그 문체를 우선한다.
+
+## 2024~2026 한국 커뮤니티 언어 아카이브 (별도 미검증 기능)
+
+2024년 11월~2026년 11월 전후의 신조어·밈·댓글 형식을 조사한다. **현재 159개 수집 후보 + 40개 출처 기반 용례 정리**, 모든 인터넷 표현을 망라한 것은 아니다.
+
+- 후보: research/candidates_index.jsonl — 공개 목록에서 분류연도가 2024~2026인 용어만 수집한 것으로, 실제 등장 시기나 사용 적합성은 **미확인**.
+- 용례 검토: lexicon/verified.jsonl — 의미·쓰는 상황·피해야 할 상황·직접 작성한 예문·날짜·출처, DC 1차 게시글 표본 일부 포함.
+- 출처: research/sources.json — 기사와 사전 링크, 날짜 및 한계.
+- 선택 도구: scripts/select_slang.py — 현재 주제와 관련된 후보만 최대 3개 추천. 글에 반드시 넣으라는 뜻 아님.
+
+사용 예시:
+
+    python3 scripts/select_slang.py --topic "패션 브랜드 로고 디자인" --genre community --asof 2026-11
+
+원고에 **선택 자료를 추가하고 싶을 때만**:
+
+    python3 scripts/run_pipeline.py --task "패션 브랜드 로고 디자인에 대한 커뮤니티 글" --genre community --slang-context --asof-month 2026-11 --prepare-only --output /tmp/slang-demo
+
+기본 집필에는 자동 유행어 삽입이 없고, 기존 3.0.1의 기능이 그대로 유지된다.
+
+수집 후보 목록을 나중에 직접 새로고침하려면 (추가 패키지 requests, beautifulsoup4 필요):
+
+    python3 scripts/refresh_slang_candidates.py --years 2024 2025 2026
+
+새로 수집된 이름은 검토 전 후보이며, 실제 뜻·시기·용례를 자동 승인하지 않는다.
 
 ## 2.1에서 유지한 것
 

@@ -9,14 +9,14 @@ REQUIRED=[
     "prompts/writer.md","prompts/polisher.md","prompts/reviewer.md","prompts/reviser.md",
     "prompts/WORK_START.md","prompts/QUICK_START.md",
     "scripts/run_pipeline.py","scripts/revision_guard.py","scripts/validate_package.py",
-    "docs/borrowed-design.md","tests/scenarios.jsonl","tests/evaluation-rubric.md"
+    "docs/borrowed-design.md","lexicon/verified.jsonl","lexicon/README.md","research/collection-notes.md","research/candidates_index.jsonl","research/sources.json","scripts/select_slang.py","scripts/refresh_slang_candidates.py","tests/scenarios.jsonl","tests/evaluation-rubric.md"
 ]
 def main():
     for rel in REQUIRED:
         path=ROOT/rel
         assert path.is_file() and path.stat().st_size>20,f"Missing/empty {rel}"
     skill=(ROOT/"SKILL.md").read_text(encoding="utf-8")
-    assert skill.startswith("---\nname:") and 'version: "3.0.1"' in skill
+    assert skill.startswith("---\nname:") and 'version: "3.1.0-preview"' in skill
     scenarios=[json.loads(line) for line in (ROOT/"tests/scenarios.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
     assert len(scenarios)>=10 and len({x["id"] for x in scenarios})==len(scenarios)
     for rel in ("SETUP_PERSISTENCE.md","memory/feedback.jsonl","scripts/feedback_memory.py","profiles/author-voice.yaml"):

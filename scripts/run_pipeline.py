@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from revision_guard import check_revision
+from select_slang import choose as choose_slang, usage_note as slang_usage_note
 
 ROOT = Path(__file__).resolve().parents[1]
 def load_text(p: Path) -> str:
@@ -94,6 +95,8 @@ def main() -> int:
     parser.add_argument("--draft-file")
     parser.add_argument("--sources-file")
     parser.add_argument("--style-file",help="Explicit reference supplied for current task")
+    parser.add_argument("--slang-context",action="store_true",help="Optional dated slang suggestions, only in draft mode")
+    parser.add_argument("--asof-month",default="2026-11",help="Evidence cutoff YYYY-MM")
     parser.add_argument("--writer-cmd")
     parser.add_argument("--reviewer-cmd",help="Optional external reviewer")
     parser.add_argument("--prepare-only",action="store_true")
@@ -117,6 +120,12 @@ def main() -> int:
     else:
         prompt=assemble_writer(args.task,sources,references)
         prompt_name="01_writer_prompt.md"
+        if args.slang_context:
+            selected=choose_slang(args.task,args.genre,args.asof_month,limit=3)
+            (out/"00_slang_candidates.json").write_text(
+                json.dumps(selected,ensure_ascii=False,indent=2),encoding="utf-8")
+            if selected:
+                prompt+="\n\n"+slang_usage_note(selected)+"\n"
     (out/prompt_name).write_text(prompt,encoding="utf-8")
     if args.prepare_only:
         for number,name in [("02","reviewer"),("03","reviser")]:
@@ -173,6 +182,7 @@ def main() -> int:
         "status":status,"human_approved":False,"model_quality_verified":False,
         "mode":args.mode,"genre":args.genre,"personal_memory_used":False,
         "auto_examples_used":False,
+        "slang_context_opt_in":args.slang_context and args.mode=="draft",
         "timestamp":datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "events":events},ensure_ascii=False,indent=2),encoding="utf-8")
     print("Final:",out/"final_draft.md")

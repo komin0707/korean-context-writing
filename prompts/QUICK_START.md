@@ -3,3 +3,5 @@ SKILL.md, knowledge/voice-priority.md, knowledge/craft-lenses.md를 읽고 소�
 의뢰: [주제 / 매체 / 근거 / 분량]
 
 완성된 원고를 편집할 때는 prompts/polisher.md를 사용해 원고를 보존하면서 필요한 부분만 다듬는다.
+
+최근 유행어가 필요한 글이라면 scripts/select_slang.py의 선택 결과만 참고한다. 아무 표현도 어울리지 않으면 일반적인 DC 말투를 유지한다.
